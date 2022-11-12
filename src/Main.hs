@@ -14,8 +14,8 @@ import GHC.Generics
 import System.Posix.Env.ByteString (getArgs)
 import Text.Read (readMaybe)
 
-sqlFindNew = "SELECT run_id, o FROM cmd_json i WHERE cmd='listchannels' AND NOT EXISTS (SELECT FROM chan_harjoitus o WHERE i.run_id = o.run_id)"
-sqlInsertNew = "INSERT INTO chan_harjoitus VALUES (?,?,?,?,?,?,?,?,?)"
+sqlFindNew = "SELECT run_id, o FROM cmd_json i WHERE cmd='listchannels' AND NOT EXISTS (SELECT FROM channel o WHERE i.run_id = o.run_id)"
+sqlInsertNew = "INSERT INTO channel VALUES (?,?,?,?,?,?,?,?,?)"
 
 -- |Uses read instance of a type to parse the value. Sometimes useful
 -- to dig numbers from a string type.
