@@ -33,15 +33,29 @@ instance FromField Channel where
   fromField = fromJSONField
 
 instance FromJSON Channel where
-  parseJSON = withObject "Channel" $ \o -> Channel
-    <$> o .: "chan_id"
-    <*> o .: "remote_pubkey"
-    <*> o .: "private"
-    <*> o .: "active"
-    <*> (o .: "capacity" >>= mRead)
-    <*> (o .: "local_balance" >>= mRead)
-    <*> o .: "uptime"
-    <*> o .: "lifetime"
+  parseJSON = withObject "Channel" $ \o -> do
+    localRaw <- o .: "local_balance" >>= mRead
+    pendings <- o .: "pending_htlcs"
+    Channel
+      <$> o .: "chan_id"
+      <*> o .: "remote_pubkey"
+      <*> o .: "private"
+      <*> o .: "active"
+      <*> (o .: "capacity" >>= mRead)
+      <*> pure (localRaw + sum (map pending pendings))
+      <*> o .: "uptime"
+      <*> o .: "lifetime"
+
+-- Local pending amount
+newtype Pending = Pending { pending :: Integer }
+
+instance FromJSON Pending where
+  parseJSON = withObject "Pending" $ \o -> do
+    amount <- o .: "amount" >>= mRead
+    incoming <- o .: "incoming"
+    pure $ Pending $ if incoming
+                     then 0
+                     else amount
 
 main = do
   [dbConnStr] <- getArgs
