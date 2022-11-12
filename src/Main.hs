@@ -39,13 +39,18 @@ instance FromJSON Channel where
   parseJSON = withObject "Channel" $ \o -> do
     localRaw <- o .: "local_balance" >>= mRead
     pendings <- o .: "pending_htlcs"
+    myCommitFee <- do
+      my <- o .: "initiator"
+      if my
+        then o .: "commit_fee" >>= mRead
+        else pure 0
     Channel
       <$> o .: "chan_id"
       <*> o .: "remote_pubkey"
       <*> o .: "private"
       <*> o .: "active"
       <*> (o .: "capacity" >>= mRead)
-      <*> pure (localRaw + sum (map pending pendings))
+      <*> pure (myCommitFee + localRaw + sum (map pending pendings))
       <*> o .: "uptime"
       <*> o .: "lifetime"
 
