@@ -14,6 +14,9 @@ import GHC.Generics
 import System.Posix.Env.ByteString (getArgs)
 import Text.Read (readMaybe)
 
+sqlFindNew = "SELECT run_id, o FROM cmd_json i WHERE cmd='listchannels' AND NOT EXISTS (SELECT FROM chan_harjoitus o WHERE i.run_id = o.run_id)"
+sqlInsertNew = "INSERT INTO chan_harjoitus VALUES (?,?,?,?,?,?,?,?,?)"
+
 -- |Uses read instance of a type to parse the value. Sometimes useful
 -- to dig numbers from a string type.
 mRead :: (Alternative m, Read a) => String -> m a 
@@ -64,8 +67,8 @@ main = do
 
 materialize :: Connection -> IO Int64
 materialize conn = do
-  xs <- query_ conn "select run_id,o from cmd_json where run_id between 323 and 325 and o->>'remote_pubkey' = '03808b1a698906bbf0457922aec66168a8edbfe98b1379249ace270b41ae0dde48'"
-  executeMany conn "INSERT INTO chan_harjoitus VALUES (?,?,?,?,?,?,?,?,?)" (map mankeloi xs)
+  xs <- query_ conn sqlFindNew
+  executeMany conn sqlInsertNew $ map mankeloi xs
 
 mankeloi :: (Int, Channel) -> [Action]
 mankeloi (rowId, chan) = toField rowId : toRow chan
