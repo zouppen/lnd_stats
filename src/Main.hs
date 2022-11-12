@@ -66,7 +66,7 @@ main = do
   materialize conn >>= print
 
 materialize :: Connection -> IO Int64
-materialize conn = do
+materialize conn = withTransaction conn $ do
   xs <- query_ conn sqlFindNew
   executeMany conn sqlInsertNew $ map mankeloi xs
 
